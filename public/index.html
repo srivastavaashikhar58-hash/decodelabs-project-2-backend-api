@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Task Management API | DecodeLabs Project 2</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="top-bar">
+    <div class="container top-bar-content">
+      <div>
+        <h1>Student Task Management API</h1>
+        <p class="subtitle">DecodeLabs Internship Project 2 — Backend API Development</p>
+      </div>
+      <div class="health-badge-wrap">
+        <span id="health-indicator" class="status-pill status-checking">Checking server...</span>
+        <button id="btn-refresh-health" class="btn-sm">Check Health</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container main-content">
+    <!-- Server Status & Overview -->
+    <section class="card server-info-card">
+      <h2>Server & API Health Status</h2>
+      <div id="health-details" class="health-meta">
+        <p>Click "Check Health" or test endpoints below.</p>
+      </div>
+      <div class="endpoint-badges">
+        <span class="badge get">GET /api/health</span>
+        <span class="badge get">GET /api/tasks</span>
+        <span class="badge get">GET /api/tasks/:id</span>
+        <span class="badge post">POST /api/tasks</span>
+        <span class="badge put">PUT /api/tasks/:id</span>
+        <span class="badge delete">DELETE /api/tasks/:id</span>
+      </div>
+    </section>
+
+    <!-- Two-column layout: Form and Task list -->
+    <div class="grid-2col">
+      <!-- Create Task Section -->
+      <section class="card">
+        <h2>Create New Task (POST /api/tasks)</h2>
+        <p class="section-desc">Test input validation and task creation. Invalid inputs will trigger 400 Bad Request.</p>
+        
+        <form id="task-form">
+          <div class="form-group">
+            <label for="task-title">Task Title <span class="req">*</span></label>
+            <input type="text" id="task-title" placeholder="e.g., Complete DecodeLabs Project 2" />
+            <small class="helper-text">Length: 3 to 100 characters</small>
+          </div>
+
+          <div class="form-group">
+            <label for="task-desc">Description <span class="req">*</span></label>
+            <textarea id="task-desc" rows="3" placeholder="e.g., Implement and test GET/POST endpoints"></textarea>
+            <small class="helper-text">Max 500 characters</small>
+          </div>
+
+          <div class="form-group">
+            <label for="task-status">Status <span class="req">*</span></label>
+            <select id="task-status">
+              <option value="pending">Pending</option>
+              <option value="in-progress">In-Progress</option>
+              <option value="completed">Completed</option>
+              <option value="invalid-status">Invalid Status (Test 400 Error)</option>
+            </select>
+          </div>
+
+          <div class="btn-group">
+            <button type="submit" class="btn-primary" id="btn-submit">Submit Task (POST)</button>
+            <button type="button" class="btn-secondary" id="btn-test-invalid">Test Invalid Input</button>
+          </div>
+        </form>
+
+        <div id="form-feedback" class="feedback-box hidden"></div>
+      </section>
+
+      <!-- Task List Section -->
+      <section class="card">
+        <div class="section-header-row">
+          <h2>Task List (GET /api/tasks)</h2>
+          <button id="btn-refresh-tasks" class="btn-outline">Refresh List</button>
+        </div>
+        <p class="section-desc">Real-time view of data currently stored in backend memory.</p>
+
+        <div class="quick-id-search">
+          <input type="text" id="search-task-id" placeholder="Enter Task ID to test GET /api/tasks/:id" />
+          <button id="btn-get-by-id" class="btn-outline">Fetch by ID</button>
+        </div>
+
+        <div id="task-list" class="task-list-container">
+          <p class="loading-text">Loading tasks...</p>
+        </div>
+      </section>
+    </div>
+
+    <!-- Live API Response Console -->
+    <section class="card response-console-card">
+      <div class="section-header-row">
+        <h2>Live API Response Console</h2>
+        <span id="response-status-pill" class="status-pill status-idle">Status: Idle</span>
+      </div>
+      <p class="section-desc">Inspect exact HTTP status codes, request payloads, and backend JSON responses.</p>
+
+      <div class="console-box">
+        <div class="console-header">
+          <span id="console-meta">Awaiting request...</span>
+          <button id="btn-clear-console" class="btn-text">Clear</button>
+        </div>
+        <pre><code id="console-output">// Raw JSON responses from the Express server will appear here.</code></pre>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-content">
+      <p>DecodeLabs Internship Project 2 — Backend API Development</p>
+      <p>Developed by <strong>Shikhar Srivastava</strong> | Node.js &amp; Express.js</p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
