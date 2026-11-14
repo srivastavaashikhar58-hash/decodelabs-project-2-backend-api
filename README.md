@@ -4,7 +4,8 @@ A robust, production-ready RESTful Backend API built with **Node.js** and **Expr
 
 Developed by: **Shikhar Srivastava**  
 Repository: [https://github.com/srivastavaashikhar58-hash/decodelabs-project-2-backend-api](https://github.com/srivastavaashikhar58-hash/decodelabs-project-2-backend-api)  
-Live Demo / Deployed API: [https://decodelabs-project-2-backend-api.onrender.com](https://decodelabs-project-2-backend-api.onrender.com)
+Live GitHub Hosted Demonstration: [https://srivastavaashikhar58-hash.github.io/decodelabs-project-2-backend-api/](https://srivastavaashikhar58-hash.github.io/decodelabs-project-2-backend-api/)  
+Live Cloud API (Render Blueprint): [https://decodelabs-project-2-backend-api.onrender.com](https://decodelabs-project-2-backend-api.onrender.com)
 
 ---
 
