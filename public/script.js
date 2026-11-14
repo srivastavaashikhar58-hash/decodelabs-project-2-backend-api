@@ -1,14 +1,9 @@
 // ============================================================
-// public/script.js — Frontend Client for API Demonstration
-// ============================================================
-// Interacts with the Express.js Backend API:
-// - GET /api/health
-// - GET /api/tasks
-// - GET /api/tasks/:id
-// - POST /api/tasks
-// - DELETE /api/tasks/:id
+// script.js — Frontend Client for API Demonstration
+// Supports both Live Express Backend and GitHub Pages Demo Mode
 // ============================================================
 
+const isGitHubPages = window.location.hostname.includes('github.io');
 const API_BASE = '/api';
 
 // DOM Elements
@@ -33,9 +28,33 @@ const consoleMeta = document.getElementById('console-meta');
 const responseStatusPill = document.getElementById('response-status-pill');
 const btnClearConsole = document.getElementById('btn-clear-console');
 
-// Helper: Log to Console Box
+// ---- CLIENT-SIDE SIMULATION FOR GITHUB PAGES ----
+// GitHub Pages hosts static files without running Node.js.
+// When hosted on github.io, this simulation ensures visitors and mentors
+// can test every GET/POST endpoint, validation rule, and status code live!
+let mockTasks = [
+  {
+    id: '1',
+    title: 'Learn Express.js',
+    description: 'Study how to build REST APIs using Express.js framework',
+    status: 'in-progress',
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: '2',
+    title: 'Complete DecodeLabs Project 2',
+    description: 'Build and deploy a Backend API project for the internship',
+    status: 'pending',
+    createdAt: new Date().toISOString()
+  }
+];
+
+let useSimulatedBackend = isGitHubPages;
+
+// Log to Console Box
 function logToConsole(method, url, status, data) {
-  consoleMeta.textContent = `${method} ${url} → HTTP ${status}`;
+  const modeTag = useSimulatedBackend ? ' [Demo Engine]' : ' [Live Server]';
+  consoleMeta.textContent = `${method} ${url} → HTTP ${status}${modeTag}`;
   
   responseStatusPill.className = `status-pill status-${status}`;
   responseStatusPill.textContent = `Status: ${status}`;
@@ -50,28 +69,42 @@ async function checkHealth() {
   healthIndicator.className = 'status-pill status-checking';
   healthIndicator.textContent = 'Checking server...';
 
+  if (useSimulatedBackend) {
+    const mockHealth = {
+      success: true,
+      status: 'healthy',
+      message: 'Student Task Management API is running (Demo Mode)',
+      timestamp: new Date().toISOString(),
+      uptime: `${(performance.now() / 1000).toFixed(2)} seconds`,
+      environment: 'github-pages-preview'
+    };
+    logToConsole('GET', `${API_BASE}/health`, 200, mockHealth);
+    healthIndicator.className = 'status-pill status-healthy';
+    healthIndicator.textContent = 'Demo API Online';
+    healthDetails.innerHTML = `
+      <p><strong>Status:</strong> ${mockHealth.status} | <strong>Mode:</strong> GitHub Pages Preview | <strong>Uptime:</strong> ${mockHealth.uptime}</p>
+      <p><small>Previewing in-browser API logic with real validation & HTTP status codes.</small></p>
+    `;
+    return;
+  }
+
   try {
     const res = await fetch(`${API_BASE}/health`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
 
     logToConsole('GET', `${API_BASE}/health`, res.status, data);
 
-    if (res.ok) {
-      healthIndicator.className = 'status-pill status-healthy';
-      healthIndicator.textContent = 'Server Online';
+    healthIndicator.className = 'status-pill status-healthy';
+    healthIndicator.textContent = 'Server Online';
 
-      healthDetails.innerHTML = `
-        <p><strong>Status:</strong> ${data.status} | <strong>Uptime:</strong> ${data.uptime} | <strong>Env:</strong> ${data.environment}</p>
-        <p><small>Checked at: ${new Date(data.timestamp).toLocaleTimeString()}</small></p>
-      `;
-    } else {
-      throw new Error(`Server returned HTTP ${res.status}`);
-    }
+    healthDetails.innerHTML = `
+      <p><strong>Status:</strong> ${data.status} | <strong>Uptime:</strong> ${data.uptime} | <strong>Env:</strong> ${data.environment}</p>
+      <p><small>Connected to Node.js / Express server.</small></p>
+    `;
   } catch (err) {
-    healthIndicator.className = 'status-pill status-error';
-    healthIndicator.textContent = 'Server Offline';
-    healthDetails.innerHTML = `<p style="color: var(--danger)">Error: ${err.message}</p>`;
-    logToConsole('GET', `${API_BASE}/health`, 'ERR', { error: err.message });
+    useSimulatedBackend = true;
+    checkHealth();
   }
 }
 
@@ -80,6 +113,17 @@ async function checkHealth() {
 // ------------------------------------------------------------
 async function fetchTasks() {
   taskListContainer.innerHTML = '<p class="loading-text">Loading tasks...</p>';
+
+  if (useSimulatedBackend) {
+    const responseData = {
+      success: true,
+      count: mockTasks.length,
+      data: mockTasks
+    };
+    logToConsole('GET', `${API_BASE}/tasks`, 200, responseData);
+    renderTaskList(mockTasks);
+    return;
+  }
 
   try {
     const res = await fetch(`${API_BASE}/tasks`);
@@ -93,8 +137,8 @@ async function fetchTasks() {
       taskListContainer.innerHTML = `<p style="color: var(--danger)">Failed to load tasks</p>`;
     }
   } catch (err) {
-    taskListContainer.innerHTML = `<p style="color: var(--danger)">Connection error: ${err.message}</p>`;
-    logToConsole('GET', `${API_BASE}/tasks`, 'ERR', { error: err.message });
+    useSimulatedBackend = true;
+    fetchTasks();
   }
 }
 
@@ -129,7 +173,21 @@ function renderTaskList(tasks) {
 async function fetchTaskById(id) {
   const targetId = id || searchTaskIdInput.value.trim();
   if (!targetId) {
-    alert('Please provide a Task ID.');
+    alert('Please enter a Task ID.');
+    return;
+  }
+
+  if (useSimulatedBackend) {
+    const task = mockTasks.find(t => t.id === targetId);
+    if (!task) {
+      const errResp = { success: false, error: `Task with ID "${targetId}" not found` };
+      logToConsole('GET', `${API_BASE}/tasks/${targetId}`, 404, errResp);
+      showFeedback('error', errResp.error);
+      return;
+    }
+    const succResp = { success: true, data: task };
+    logToConsole('GET', `${API_BASE}/tasks/${targetId}`, 200, succResp);
+    showFeedback('success', `Found task: "${task.title}"`);
     return;
   }
 
@@ -168,6 +226,63 @@ taskForm.addEventListener('submit', async (e) => {
 async function submitTask(payload) {
   formFeedback.className = 'feedback-box hidden';
 
+  if (useSimulatedBackend) {
+    // Exact same validation rules as Express validateTask middleware
+    const errors = [];
+    const ALLOWED = ['pending', 'in-progress', 'completed'];
+
+    if (!payload.title || typeof payload.title !== 'string' || payload.title.trim().length === 0) {
+      errors.push('Field "title" is required.');
+    } else if (payload.title.trim().length < 3) {
+      errors.push('"title" must be at least 3 characters long.');
+    } else if (payload.title.trim().length > 100) {
+      errors.push('"title" must be at most 100 characters long.');
+    }
+
+    if (!payload.description || typeof payload.description !== 'string' || payload.description.trim().length === 0) {
+      errors.push('Field "description" is required.');
+    } else if (payload.description.trim().length > 500) {
+      errors.push('"description" must be at most 500 characters long.');
+    }
+
+    if (!payload.status || !ALLOWED.includes(payload.status)) {
+      errors.push(`"status" must be one of: ${ALLOWED.join(', ')}. Received: "${payload.status}".`);
+    }
+
+    if (errors.length > 0) {
+      const errResp = {
+        success: false,
+        error: 'Validation failed',
+        details: errors
+      };
+      logToConsole('POST', `${API_BASE}/tasks`, 400, errResp);
+      const detailsList = `<ul>${errors.map(d => `<li>${escapeHtml(d)}</li>`).join('')}</ul>`;
+      showFeedback('error', `<strong>Validation Error (400 Bad Request):</strong> ${errResp.error}${detailsList}`);
+      return;
+    }
+
+    // Success: 201 Created
+    const newTask = {
+      id: 'task-' + Math.floor(Math.random() * 90000 + 10000),
+      title: payload.title.trim(),
+      description: payload.description.trim(),
+      status: payload.status,
+      createdAt: new Date().toISOString()
+    };
+    mockTasks.push(newTask);
+
+    const succResp = {
+      success: true,
+      message: 'Task created successfully',
+      data: newTask
+    };
+    logToConsole('POST', `${API_BASE}/tasks`, 201, succResp);
+    showFeedback('success', `Task created! ID: ${newTask.id}`);
+    taskForm.reset();
+    fetchTasks();
+    return;
+  }
+
   try {
     const res = await fetch(`${API_BASE}/tasks`, {
       method: 'POST',
@@ -181,7 +296,7 @@ async function submitTask(payload) {
     if (res.status === 201) {
       showFeedback('success', `Task created! ID: ${data.data.id}`);
       taskForm.reset();
-      fetchTasks(); // Refresh list
+      fetchTasks();
     } else if (res.status === 400) {
       const detailsList = data.details
         ? `<ul>${data.details.map(d => `<li>${escapeHtml(d)}</li>`).join('')}</ul>`
@@ -200,8 +315,6 @@ async function submitTask(payload) {
 // 5. Test Invalid Input (Triggers 400 Bad Request)
 // ------------------------------------------------------------
 btnTestInvalid.addEventListener('click', () => {
-  // Pre-fill intentionally invalid data:
-  // Short title (<3 chars), empty desc, invalid status
   inputTitle.value = 'Hi';
   inputDesc.value = '';
   selectStatus.value = 'invalid-status';
@@ -218,6 +331,22 @@ btnTestInvalid.addEventListener('click', () => {
 // ------------------------------------------------------------
 async function deleteTaskById(id) {
   if (!confirm(`Delete task ${id}?`)) return;
+
+  if (useSimulatedBackend) {
+    const index = mockTasks.findIndex(t => t.id === id);
+    if (index === -1) {
+      const errResp = { success: false, error: `Task with ID "${id}" not found` };
+      logToConsole('DELETE', `${API_BASE}/tasks/${id}`, 404, errResp);
+      showFeedback('error', errResp.error);
+      return;
+    }
+    const deleted = mockTasks.splice(index, 1)[0];
+    const succResp = { success: true, message: 'Task deleted successfully', data: deleted };
+    logToConsole('DELETE', `${API_BASE}/tasks/${id}`, 200, succResp);
+    showFeedback('success', `Task ${id} deleted.`);
+    fetchTasks();
+    return;
+  }
 
   try {
     const res = await fetch(`${API_BASE}/tasks/${encodeURIComponent(id)}`, {
@@ -238,9 +367,7 @@ async function deleteTaskById(id) {
   }
 }
 
-// ------------------------------------------------------------
 // UI Utilities
-// ------------------------------------------------------------
 function showFeedback(type, htmlContent) {
   formFeedback.className = `feedback-box ${type}`;
   formFeedback.innerHTML = htmlContent;
